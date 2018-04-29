@@ -1,6 +1,6 @@
 <div align="center">
   <h1>
-    Sort browser tabs by alexa ranking  
+    Sort browser tabs by github stars  
   </h1>
   <p>
     <strong>Developing for Chrome only but may work on Opera & Firefox as well.</strong>
@@ -8,7 +8,7 @@
 </div>
 
 ## Installation
-1. Clone the repository `git clone https://github.com/itsazzad/sort-tabs-by-alexa-ranking.git`
+1. Clone the repository `git clone https://github.com/itsazzad/sort-tabs-by-github-stars.git`
 2. Run `npm install`
 3. Run `npm run build`
 

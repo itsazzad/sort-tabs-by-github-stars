@@ -3,38 +3,46 @@ import storage from "./utils/storage";
 
 var status = '';
 
-//TODO: Need to have facility for getting list of Alexa data instead of single one
-function Alexa(tab, url, callback) {
+//TODO: Need to have facility for getting list of Github data instead of single one
+function Github(tab, newURL, callback) {
+  let repo = newURL.pathname.split('/');
+  if (!(repo[1] && repo[2])) {
+    return;
+  }
+
+  repo = `${repo[1]}/${repo[2]}`;
+
   var data = {
-    url: url,
-    popularity: null,
+    repo: repo,
+    stargazers_count: null,
     updated_at: Date.now(),
   };
 
-  storage.get(url, function (sd) {
-    if (sd[url] && sd[url].popularity && (Date.now() - sd[url].updated_at) < 86400000) {
-      console.info(url, 'Reading from storage');
-      callback(tab, sd[url]);
+  storage.get(repo, function (sd) {
+    if (sd[repo] && sd[repo].stargazers_count && (Date.now() - sd[repo].updated_at) < 86400000) {
+      console.info(repo, 'Reading from storage');
+      callback(tab, sd[repo]);
     } else {
       setLocalData();
     }
   });
 
   var setLocalData = function () {
-    getAlexaData();
+    getGithubData();
   };
 
-  var getAlexaData = function () {
+  var getGithubData = function () {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", 'https://data.alexa.com/data?cli=10&url=' + url, true);
+    xhr.responseType = 'json';
+    xhr.open("GET", `https://api.github.com/repos/${repo}?840d485433b5226470f0718d933b7ba79f81edb1`, true);
     xhr.onreadystatechange = function () {
       if (this.readyState === 4 && this.status === 200) {
-        data.popularity = parsePopularity(this);
+        data.stargazers_count = this.response.stargazers_count;
         data.updated_at = Date.now();
         var items = {};
-        items[url] = data;
+        items[repo] = data;
         storage.set(items, function () {
-          console.info(url, 'data updated');
+          console.info(repo, 'data updated');
         });
 
         callback(tab, data);
@@ -42,19 +50,6 @@ function Alexa(tab, url, callback) {
     };
     xhr.send();
   };
-
-  function parsePopularity(xml) {
-    var xmlDoc = xml.responseXML;
-    try {
-      return parseInt(
-        xmlDoc.getElementsByTagName("SD")[0].getElementsByTagName("POPULARITY")[0].getAttribute('TEXT')
-      );
-    } catch (e) {
-      console.error(url);
-      console.error(e);
-      return null;
-    }
-  }
 }
 
 ext.browserAction.onClicked.addListener(function () {
@@ -62,12 +57,12 @@ ext.browserAction.onClicked.addListener(function () {
     var tabData = [];
     for (var i = 0, tab; tab = tabs[i]; i++) {
       // console.log(tab);
-      new Alexa(tab, (new URL(tab.url)).hostname, function (currentTab, data) {
-        if (data.popularity) {
+      new Github(tab, (new URL(tab.url)), function (currentTab, data) {
+        if (data.stargazers_count) {
           data.tabId = currentTab.id;
           tabData.push(data);
           tabData.sort(function (a, b) {
-            return a.popularity - b.popularity;
+            return b.stargazers_count - a.stargazers_count;
           });
           var tabIds = tabData.map(function (obj) {
             return obj.tabId;
