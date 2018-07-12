@@ -6,3 +6,5 @@ dist
 .DS_Store
 build
 .idea
+package-lock.json
+yarn.lock
